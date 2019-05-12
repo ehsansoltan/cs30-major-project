@@ -13,25 +13,27 @@ class Map{
     this.mapTileSize = 13;
     this.textSize = 25;
 
-    this.currentRoomWidth;
     this.currentRoomHeight;
-    this.maxRoomSize = 10;
-    this.minRoomSize = 4;
-    this.roomAdded;
-    this.roomXSide;
-    this.roomYSide;
+    this.currentRoomWidth;
+    this.maxRoomSize = 8;
+    this.roomX;
+    this.roomY;
+    this.roomXChange;
+    this.roomYChange;
 
     this.corridorX;
     this.corridorY;
     this.corridorDirection;
+    this.corridorXChange;
+    this.corridorYChange;
+    this.corridorMaxLength = 12;
+    this.corridorMinLength = 5;
     this.corridorLength;
-    this.roomEdge = false;
-    this.corridorXChange = 0;
-    this.corridorYChange = 0;
-    this.maxCorridorLength = 10;
-    this.minCorridorLength = 4;
-    this.timesRoomPlaceFailed = 0;
-    this.corridorTurnDirection;
+
+
+   
+
+    
 
     
     
@@ -62,166 +64,102 @@ class Map{
     }
   }
 
-  //picks a random corridor spot in which a corridor will branch out from
-  findCorridorSpot(){
+  //finds a suitable spot to place a corridor
+  pickCorridorSpot(){
 
-    this.corridorXChange = 0;
-    this.corridorYChange = 0;
-    this.roomEdge = false;
+    this.corridorX = Math.floor(random(1, this.mapSize));
+    this.corridorY = Math.floor(random(1, this.mapSize));
 
-    while (this.roomEdge === false){
-      this.corridorX = Math.floor(random(1, this.mapSize - 1));
-      this.corridorY = Math.floor(random(1, this.mapSize - 1));
-
-      if (this.map[this.corridorY][this.corridorX] === "#"){
-
-        if (this.map[this.corridorY + 1][this.corridorX] === "."){
-          this.corridorDirection = "up";
-          this.corridorYChange = -1;
-          this.roomEdge = true;
-        }
-
-        else if (this.map[this.corridorY - 1][this.corridorX] === "."){
-          this.corridorDirection = "down";
-          this.corridorYChange = 1;
-          this.roomEdge = true;
-        }
-
-        else if (this.map[this.corridorY][this.corridorX + 1] === "."){
-          this.corridorDirection = "left";
-          this.corridorXChange = -1;
-          this.roomEdge = true;
-        }
-
-        else if (this.map[this.corridorY][this.corridorX - 1] === "."){
-          this.corridorDirection = "right";
-          this.corridorXChange = 1;
-          this.roomEdge = true;
-        }
-
-
-      }
+    while (this.map[this.corridorY][this.corridorX] !== "."){
+      this.corridorX = Math.floor(random(1, this.mapSize));
+      this.corridorY = Math.floor(random(1, this.mapSize));
     }
-  }
+    
 
+    this.corridorDirection = Math.floor(random(4));
 
-  addCorridor(){
-    this.corridorLength = random(this.minCorridorLength, this.maxCorridorLength);
+    switch(this.corridorDirection){
 
-    while (this.corridorLength > 0 && this.corridorX + this.corridorXChange > 0 && this.corridorX + this.corridorXChange < this.mapSize && this.corridorY + this.corridorYChange > 0 && this.corridorY + this.corridorYChange < this.mapSize && this.corridorLength < this.maxCorridorLength){
+      case 0:
+        this.corridorDirection = "left";
+        this.corridorXChange = -1;
+        this.corridorYChange = 0;
+      break;
 
-      //end corridor if it intersects an existing corridor
-      if (this.map[this.corridorY][this.corridorX] === "." || this.map[this.corridorY][this.corridorX] === "+") this.corridorLength = 0;
+      case 1:
+        this.corridorDirection = "right";
+        this.corridorXChange = 1;
+        this.corridorYChange = 0;
+      break;
 
-      //end coridor if adjacent to a parallel corridor (to ensure corridors are merely one tile wide)
-      //if (this.corridorXChange === 0 && this.map[this.corridorY][this.corridorX + 1] === "+" || this.corridorXChange === 0 && this.map[this.corridorY][this.corridorX - 1]) this.corridorLength = 0;
-      //if (this.corridorYChange === 0 && this.map[this.corridorY + 1][this.corridorX] === "+" || this.corridorYChange === 0 && this.map[this.corridorY - 1][this.corridorX]) this.corridorLength = 0;
+      case 2:
+        this.corridorDirection = "up";
+        this.corridorXChange = 0;
+        this.corridorYChange = -1;
+      break;
 
+      case 3:
+        this.corridorDirection = "down";
+        this.corridorXChange = 0;
+        this.corridorYChange = 1;
+      break;
+    }
 
-      this.map[this.corridorY][this.corridorX] = ".";
-      this.corridorY += this.corridorYChange;
+    while (this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
       this.corridorX += this.corridorXChange;
-      this.corridorLength--;
+      this.corridorY += this.corridorYChange;
     }
-
   }
 
-  addCorridors(iterations){
-    for (let i = 0; i < iterations; i++){
-      this.findCorridorSpot();
-      this.addCorridor();
-    }
+   //calls pickCorridorSpot to find the spot and then draws the corridor
+  drawCorridor(){
 
-  }
-
-  turnCorridor(){
-    this.corridorTurnDirection = random(3);
-
-    if (this.corridorTurnDirection === 0) {
-      this.corridorDirection = "left";
-      this.corridorXChange = -1;
-      this.corridorYChange = 0;
-    }
-    if (this.corridorTurnDirection === 1) {
-      this.corridorDirection = "right";
-      this.corridorXChange = 1;
-      this.corridorYChange = 0;
-    }
-    if (this.corridorTurnDirection === 2) {
-      this.corridorDirection = "up";
-      this.corridorXChange = 0;
-      this.corridorYChange = -1;
-    }
-    if (this.corridorTurnDirection === 3) {
-      this.corridorDirection = "down";
-      this.corridorXChange = 0;
-      this.corridorYChange = 1;
-    }
    
-    
-  }
+    this.pickCorridorSpot()
+    this.corridorLength = Math.floor(random(this.corridorMinLength, this.corridorMaxLength));
 
-  addRoom(){
-    this.currentRoomHeight = Math.floor(random(this.minRoomSize, this.maxRoomSize));
-    this.currentRoomWidth = Math.floor(random(this.minRoomSize, this.maxRoomSize));
-    this.roomAdded = false;
-
-    if (this.corridorY + this.currentRoomHeight < this.mapSize && this.corridorX + this.currentRoomWidth < this.mapSize){
-      for (let y = this.corridorY; y < this.corridorY + this.currentRoomHeight; y++){
-        for (let x = this.corridorX; x < this.corridorX + this.currentRoomWidth; x++){
-          this.map[y][x] = ".";
-  
+      for (let i = 0; i < this.corridorLength; i++){
+        if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize){
+          this.corridorX += this.corridorXChange;
+          this.corridorY += this.corridorYChange;
+          this.map[this.corridorY][this.corridorX] = "+";
         }
       }
-
-    }
- 
     
   }
 
-  noRoomPresent(){
 
-    if (this.corridorY + this.currentRoomHeight < this.mapSize && this.corridorX + this.currentRoomWidth < this.mapSize){
+  //generates coordinates and dimensions of potential room and returns boolean based on if there's enough space for it
+  potentialRoom(){
 
-      for (let y = this.corridorY; y < this.corridorY + this.currentRoomHeight; y++){
-        for (let x = this.corridorX; x < this.corridorX + this.currentRoomWidth; x++){
-          if (this.map[y][x] === ".") return false;
-        }
-      }
+    //sets initial room location to end of corridor
+    this.roomX = this.corridorX;
+    this.roomy = this.corridorY;
+
+    //sets size
+    this.currentRoomHeight = random()
+
+    if (this.corridorDirection === "up"){
+      this.roomYChange = -1;
+      if (this.roomX - this.)
+      if (this.roomX < Math.floor(this.mapSize/2)) this.
+
+    }
+    else if (corridorDirection === "down"){
+      
+    }
+    else if (corridorDirection === "left"){
+      
+    }
+    else if (corridorDirection === "right"){
+      
     }
 
-    
-    return true;
 
   }
 
 
   
-  generateMap(iterations){
-    for (let i = 0; i < iterations; i++){
-
-      if (this.noRoomPresent() === true) {
-        
-        this.addRoom();
-        
-        
-
-      }
-      
-
-      this.addCorridors(1);
-      this.turnCorridor();
-      
-
-      
-     
-    }
-
-    
-    
-
-  }
-
   //draws the map
   drawMap(size){
     textSize(this.textSize);
@@ -244,7 +182,7 @@ function setup() {
   map1 = new Map();
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
-  map1.generateMap(35);
+  map1.drawCorridor();
 }
 
 function draw() {
