@@ -16,6 +16,7 @@ class Map{
     this.currentRoomHeight;
     this.currentRoomWidth;
     this.maxRoomSize = 8;
+    this.minRoomSize = 3;
     this.roomX;
     this.roomY;
     this.roomXChange;
@@ -80,82 +81,135 @@ class Map{
 
     switch(this.corridorDirection){
 
-      case 0:
-        this.corridorDirection = "left";
-        this.corridorXChange = -1;
-        this.corridorYChange = 0;
+    case 0:
+      this.corridorDirection = "left";
+      this.corridorXChange = -1;
+      this.corridorYChange = 0;
       break;
 
-      case 1:
-        this.corridorDirection = "right";
-        this.corridorXChange = 1;
-        this.corridorYChange = 0;
+    case 1:
+      this.corridorDirection = "right";
+      this.corridorXChange = 1;
+      this.corridorYChange = 0;
       break;
 
-      case 2:
-        this.corridorDirection = "up";
-        this.corridorXChange = 0;
-        this.corridorYChange = -1;
+    case 2:
+      this.corridorDirection = "up";
+      this.corridorXChange = 0;
+      this.corridorYChange = -1;
       break;
 
-      case 3:
-        this.corridorDirection = "down";
-        this.corridorXChange = 0;
-        this.corridorYChange = 1;
+    case 3:
+      this.corridorDirection = "down";
+      this.corridorXChange = 0;
+      this.corridorYChange = 1;
       break;
     }
 
+
+    //snaps the start of the potential corridor to past the wall
     while (this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
     }
+ 
   }
 
-   //calls pickCorridorSpot to find the spot and then draws the corridor
-  drawCorridor(){
+  //calls pickCorridorSpot to find the spot and then draws the corridor
+  addCorridor(){
 
    
     this.pickCorridorSpot()
     this.corridorLength = Math.floor(random(this.corridorMinLength, this.corridorMaxLength));
 
-      for (let i = 0; i < this.corridorLength; i++){
-        if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize){
-          this.corridorX += this.corridorXChange;
-          this.corridorY += this.corridorYChange;
-          this.map[this.corridorY][this.corridorX] = "+";
-        }
+    for (let i = 0; i < this.corridorLength; i++){
+      if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize){
+        this.corridorX += this.corridorXChange;
+        this.corridorY += this.corridorYChange;
+        this.map[this.corridorY][this.corridorX] = "+";
       }
+    }
     
   }
 
 
-  //generates coordinates and dimensions of potential room and returns boolean based on if there's enough space for it
+  //generates coordinates and dimensions of potential room
   potentialRoom(){
 
     //sets initial room location to end of corridor
     this.roomX = this.corridorX;
-    this.roomy = this.corridorY;
+    this.roomY = this.corridorY;
 
     //sets size
-    this.currentRoomHeight = random()
+    this.currentRoomHeight = Math.floor(random(this.minRoomSize, this.maxRoomSize));
+    this.currentRoomWidth = Math.floor(random(this.minRoomSize, this.maxRoomSize));
 
     if (this.corridorDirection === "up"){
       this.roomYChange = -1;
-      if (this.roomX - this.)
-      if (this.roomX < Math.floor(this.mapSize/2)) this.
-
+      this.roomXChange = 1;
+      if (this.roomX - Math.floor(this.currentRoomWidth/2) > 0) this.roomX -= Math.floor(this.currentRoomWidth/2);
     }
-    else if (corridorDirection === "down"){
+    else if (this.corridorDirection === "down"){
+      this.roomYChange = 1;
+      this.roomXChange = 1;
+      if (this.roomX - Math.floor(this.currentRoomWidth/2) > 0) this.roomX -= Math.floor(this.currentRoomWidth/2);
       
     }
-    else if (corridorDirection === "left"){
+    else if (this.corridorDirection === "left"){
+      this.roomXChange = -1;
+      this.roomYChange = 1;
+      if (this.roomY - Math.floor(this.currentRoomHeight/2) > 0) this.roomY -= Math.floor(this.currentRoomHeight/2);
       
     }
-    else if (corridorDirection === "right"){
-      
+    else if (this.corridorDirection === "right"){
+      this.roomXChange = 1;
+      this.roomYChange = 1;
+      if (this.roomY - Math.floor(this.currentRoomHeight/2) > 0) this.roomY -= Math.floor(this.currentRoomHeight/2);
     }
 
+    //makes the room start after the corridor so it doesnt go into the corridor
+    this.roomX += this.roomXChange;
+    this.roomY += this.roomYChange;
+  }
 
+  //returns a boolean if there is nothing in the way of the potential room
+  spotEmpty(){
+    for (let y = this.roomY; y !== this.roomY + this.roomYChange*this.currentRoomHeight; y += this.roomYChange){
+      for (let x = this.roomX; x !== this.roomX + this.roomXChange*this.currentRoomWidth; x += this.roomXChange){
+
+      
+        if (this.map[y][x] !== "#") return false;
+        
+        
+       
+
+      }
+    }
+    return true;
+
+  }
+
+  placeRoom(){
+    this.potentialRoom();
+
+    if (this.spotEmpty() === true){
+      for (let y = this.roomY; y !== this.roomY + this.roomYChange*this.currentRoomHeight; y += this.roomYChange){
+        for (let x = this.roomX; x !== this.roomX + this.roomXChange*this.currentRoomWidth; x += this.roomXChange){
+          this.map[y][x] = ".";
+        }
+      }
+
+
+    }
+    
+  }
+
+  generateDungeon(iterations){
+    for (let i = 0; i < iterations; i++){
+      this.addCorridor();
+      this.placeRoom();
+    }
+    
   }
 
 
@@ -182,7 +236,11 @@ function setup() {
   map1 = new Map();
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
-  map1.drawCorridor();
+ /* map1.addCorridor();
+  map1.potentialRoom();
+  map1.placeRoom();
+  */
+  map1.generateDungeon(4);
 }
 
 function draw() {
