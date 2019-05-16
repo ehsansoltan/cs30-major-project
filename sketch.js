@@ -25,6 +25,7 @@ class Map{
     this.corridorX;
     this.corridorY;
     this.corridorDirection;
+    this.corridorLastDirection;
     this.corridorXChange;
     this.corridorYChange;
     this.corridorMaxLength = 12;
@@ -65,9 +66,7 @@ class Map{
     }
   }
 
-  //finds a suitable spot to place a corridor
-  pickCorridorSpot(){
-
+  pickInitialCorridor(){
     this.corridorX = Math.floor(random(1, this.mapSize));
     this.corridorY = Math.floor(random(1, this.mapSize));
 
@@ -75,9 +74,21 @@ class Map{
       this.corridorX = Math.floor(random(1, this.mapSize));
       this.corridorY = Math.floor(random(1, this.mapSize));
     }
-    
+  }
+
+  //finds a suitable spot to place next corridor
+  pickCorridorSpot(){
 
     this.corridorDirection = Math.floor(random(4));
+
+    //sets new direction if new one was same as old one
+    while (this.corridorDirection === this.corridorLastDirection){
+      this.corridorDirection = Math.floor(random(4));
+    }
+
+
+
+    this.corridorLastDirection = this.corridorDirection;
 
     switch(this.corridorDirection){
 
@@ -107,11 +118,14 @@ class Map{
     }
 
 
+
     //snaps the start of the potential corridor to past the wall
-    while (this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
+    while (this.corridorY > 0 && this.corridorY < this.mapSize && this.corridorX > 0 && this.corridorX < this.mapSize && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
     }
+
+ 
  
   }
 
@@ -123,9 +137,9 @@ class Map{
     this.corridorLength = Math.floor(random(this.corridorMinLength, this.corridorMaxLength));
 
     for (let i = 0; i < this.corridorLength; i++){
+      this.corridorX += this.corridorXChange;
+      this.corridorY += this.corridorYChange;
       if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize){
-        this.corridorX += this.corridorXChange;
-        this.corridorY += this.corridorYChange;
         this.map[this.corridorY][this.corridorX] = "+";
       }
     }
@@ -177,7 +191,7 @@ class Map{
     for (let y = this.roomY; y !== this.roomY + this.roomYChange*this.currentRoomHeight; y += this.roomYChange){
       for (let x = this.roomX; x !== this.roomX + this.roomXChange*this.currentRoomWidth; x += this.roomXChange){
 
-      
+        if (x <= 0 || x >= this.mapSize || y <= 0 || y >= this.mapSize) return false;
         if (this.map[y][x] !== "#") return false;
         
         
@@ -205,7 +219,9 @@ class Map{
   }
 
   generateDungeon(iterations){
+    this.pickInitialCorridor();
     for (let i = 0; i < iterations; i++){
+      this.pickCorridorSpot();
       this.addCorridor();
       this.placeRoom();
     }
