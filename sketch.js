@@ -66,7 +66,7 @@ class Map{
     }
   }
 
-  pickInitialCorridor(){
+  pickCorridorSpot(){
     this.corridorX = Math.floor(random(1, this.mapSize));
     this.corridorY = Math.floor(random(1, this.mapSize));
 
@@ -77,7 +77,7 @@ class Map{
   }
 
   //finds a suitable spot to place next corridor
-  pickCorridorSpot(){
+  pickCorridorDirectionAndLength(){
 
     this.corridorDirection = Math.floor(random(4));
 
@@ -120,9 +120,12 @@ class Map{
 
 
     //snaps the start of the potential corridor to past the wall
-    while (this.corridorY > 0 && this.corridorY < this.mapSize && this.corridorX > 0 && this.corridorX < this.mapSize && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
+
+    while (this.corridorY > 1 && this.corridorY < this.mapSize + 1 && this.corridorX > 1 && this.corridorX < this.mapSize - 1 && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
+      
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
+      
     }
 
  
@@ -133,15 +136,36 @@ class Map{
   addCorridor(){
 
    
-    this.pickCorridorSpot()
+    this.pickCorridorDirectionAndLength();
     this.corridorLength = Math.floor(random(this.corridorMinLength, this.corridorMaxLength));
 
     for (let i = 0; i < this.corridorLength; i++){
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
-      if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize){
+      if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize && this.map[this.corridorY][this.corridorX] !== "."){
         this.map[this.corridorY][this.corridorX] = "+";
       }
+
+      //ending the corridor before it starts if it's both adjacent and parallel to an existing corridor or a room
+
+      if (this.corridorY + 1 < this.mapSize - 1 && this.corridorY - 1 > 0){
+        if (this.corridorDirection === "left"  || this.corridorDirection === "right"){
+          if (this.map[this.corridorY + 1][this.corridorX] !== "#" || this.map[this.corridorY - 1][this.corridorX] !== "#") this.corridorLength = 0;
+        }
+
+      }
+      
+      if (this.corridorX + 1 < this.mapSize - 1 && this.corridorX - 1 > 0){
+        if (this.corridorDirection === "up" || this.corridorDirection === "down"){
+          
+          if (this.map[this.corridorY][this.corridorX + 1] !== "#" || this.map[this.corridorY][this.corridorX - 1] !== "#") this.corridorLength = 0;
+        
+        }
+      }
+      
+    
+
+
     }
     
   }
@@ -219,9 +243,11 @@ class Map{
   }
 
   generateDungeon(iterations){
-    this.pickInitialCorridor();
+ 
+    
     for (let i = 0; i < iterations; i++){
       this.pickCorridorSpot();
+      this.pickCorridorDirectionAndLength();
       this.addCorridor();
       this.placeRoom();
     }
@@ -252,7 +278,7 @@ function setup() {
   map1 = new Map();
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
- /* map1.addCorridor();
+  /* map1.addCorridor();
   map1.potentialRoom();
   map1.placeRoom();
   */
