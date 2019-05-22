@@ -10,13 +10,13 @@ class Map{
   constructor(){
     this.map = [];
     this.mapSize = 50;
-    this.mapTileSize = 13;
-    this.textSize = 25;
+    this.mapTileSize = 12;
+    this.textSize = 18;
 
     this.currentRoomHeight;
     this.currentRoomWidth;
-    this.maxRoomSize = 8;
-    this.minRoomSize = 3;
+    this.maxRoomSize = 11;
+    this.minRoomSize = 4;
     this.roomX;
     this.roomY;
     this.roomXChange;
@@ -121,7 +121,7 @@ class Map{
 
     //snaps the start of the potential corridor to past the wall
 
-    while (this.corridorY > 1 && this.corridorY < this.mapSize + 1 && this.corridorX > 1 && this.corridorX < this.mapSize - 1 && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
+    while (this.corridorY > 1 && this.corridorY < this.mapSize - 1 && this.corridorX > 1 && this.corridorX < this.mapSize - 1 && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
       
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
@@ -142,26 +142,21 @@ class Map{
     for (let i = 0; i < this.corridorLength; i++){
       this.corridorX += this.corridorXChange;
       this.corridorY += this.corridorYChange;
-      if (this.corridorX > 0 && this.corridorX < this.mapSize && this.corridorY > 0 && this.corridorY < this.mapSize && this.map[this.corridorY][this.corridorX] !== "."){
+      if (this.corridorX > 0 && this.corridorX < this.mapSize -1 && this.corridorY > 0 && this.corridorY < this.mapSize -1 && this.map[this.corridorY][this.corridorX] !== "."){
         this.map[this.corridorY][this.corridorX] = "+";
-      }
 
-      //ending the corridor before it starts if it's both adjacent and parallel to an existing corridor or a room
 
-      if (this.corridorY + 1 < this.mapSize - 1 && this.corridorY - 1 > 0){
-        if (this.corridorDirection === "left"  || this.corridorDirection === "right"){
-          if (this.map[this.corridorY + 1][this.corridorX] !== "#" || this.map[this.corridorY - 1][this.corridorX] !== "#") this.corridorLength = 0;
+        //changing the tile back to "#" if adjacent and parallel to an existing corridor or a room
+        if (this.corridorDirection === "up" || this.corridorDirection === "down"){
+          if (this.map[this.corridorY][this.corridorX -1] !== "#" || this.map[this.corridorY][this.corridorX + 1] !== "#") this.map[this.corridorY][this.corridorX] = "#";
         }
-
+        else if (this.corridorDirection === "left" || this.corridorDirection === "right"){
+          if (this.map[this.corridorY - 1][this.corridorX] !== "#" || this.map[this.corridorY + 1][this.corridorX] !== "#") this.map[this.corridorY][this.corridorX] = "#";
+        }
       }
       
-      if (this.corridorX + 1 < this.mapSize - 1 && this.corridorX - 1 > 0){
-        if (this.corridorDirection === "up" || this.corridorDirection === "down"){
-          
-          if (this.map[this.corridorY][this.corridorX + 1] !== "#" || this.map[this.corridorY][this.corridorX - 1] !== "#") this.corridorLength = 0;
-        
-        }
-      }
+
+      
       
     
 
@@ -210,12 +205,13 @@ class Map{
     this.roomY += this.roomYChange;
   }
 
-  //returns a boolean if there is nothing in the way of the potential room
+  //returns true if there is nothing in the way of the potential room and false if there is
   spotEmpty(){
     for (let y = this.roomY; y !== this.roomY + this.roomYChange*this.currentRoomHeight; y += this.roomYChange){
       for (let x = this.roomX; x !== this.roomX + this.roomXChange*this.currentRoomWidth; x += this.roomXChange){
 
         if (x <= 0 || x >= this.mapSize || y <= 0 || y >= this.mapSize) return false;
+
         if (this.map[y][x] !== "#") return false;
         
         
@@ -236,8 +232,11 @@ class Map{
           this.map[y][x] = ".";
         }
       }
-
-
+    
+    }
+    else {
+      this.pickCorridorDirectionAndLength();
+      this.addCorridor();
     }
     
   }
