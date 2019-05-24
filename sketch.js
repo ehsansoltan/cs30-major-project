@@ -66,6 +66,8 @@ class Map{
     }
   }
 
+
+  //picks a random spot that isn't "." to start a corridor
   pickCorridorSpot(){
     this.corridorX = Math.floor(random(1, this.mapSize));
     this.corridorY = Math.floor(random(1, this.mapSize));
@@ -88,8 +90,11 @@ class Map{
 
 
 
+    //sets the last corridor direction
     this.corridorLastDirection = this.corridorDirection;
 
+
+    //changes the corridor information based on a random number from 0 - 3 (four directions)
     switch(this.corridorDirection){
 
     case 0:
@@ -120,7 +125,6 @@ class Map{
 
 
     //snaps the start of the potential corridor to past the wall
-
     while (this.corridorY > 1 && this.corridorY < this.mapSize - 1 && this.corridorX > 1 && this.corridorX < this.mapSize - 1 && this.map[this.corridorY + this.corridorYChange][this.corridorX + this.corridorXChange] !== "#"){
       
       this.corridorX += this.corridorXChange;
@@ -147,6 +151,7 @@ class Map{
 
 
         //changing the tile back to "#" if adjacent and parallel to an existing corridor or a room
+       
         if (this.corridorDirection === "up" || this.corridorDirection === "down"){
           if (this.map[this.corridorY][this.corridorX -1] !== "#" || this.map[this.corridorY][this.corridorX + 1] !== "#") this.map[this.corridorY][this.corridorX] = "#";
         }
@@ -281,7 +286,7 @@ function setup() {
   map1.potentialRoom();
   map1.placeRoom();
   */
-  map1.generateDungeon(4);
+  map1.generateDungeon(5);
 }
 
 function draw() {
