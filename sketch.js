@@ -32,6 +32,11 @@ class Map{
     this.corridorMinLength = 5;
     this.corridorLength;
 
+    this.stairX = 0;
+    this.stairY = 0;
+
+    this.entities = [];
+
 
    
 
@@ -150,14 +155,27 @@ class Map{
         this.map[this.corridorY][this.corridorX] = "+";
 
 
-        //changing the tile back to "#" if adjacent and parallel to an existing corridor or a room
+        //changing the tile back to "#" and ends corridor if adjacent and parallel to a room
        
         if (this.corridorDirection === "up" || this.corridorDirection === "down"){
-          if (this.map[this.corridorY][this.corridorX -1] !== "#" || this.map[this.corridorY][this.corridorX + 1] !== "#") this.map[this.corridorY][this.corridorX] = "#";
+          if (this.map[this.corridorY][this.corridorX -1] === "." || this.map[this.corridorY][this.corridorX + 1] === "."){
+            this.map[this.corridorY][this.corridorX] = "#";
+            this.corridorLength = 0;
+
+          }
+          
+       
         }
         else if (this.corridorDirection === "left" || this.corridorDirection === "right"){
-          if (this.map[this.corridorY - 1][this.corridorX] !== "#" || this.map[this.corridorY + 1][this.corridorX] !== "#") this.map[this.corridorY][this.corridorX] = "#";
+          if (this.map[this.corridorY - 1][this.corridorX] === "." || this.map[this.corridorY + 1][this.corridorX] === "."){
+            this.map[this.corridorY][this.corridorX] = "#";
+            this.corridorLength = 0;
+
+          }
+
+          
         }
+        
       }
       
 
@@ -212,14 +230,14 @@ class Map{
 
   //returns true if there is nothing in the way of the potential room and false if there is
   spotEmpty(){
-    for (let y = this.roomY; y !== this.roomY + this.roomYChange*this.currentRoomHeight; y += this.roomYChange){
-      for (let x = this.roomX; x !== this.roomX + this.roomXChange*this.currentRoomWidth; x += this.roomXChange){
+    for (let y = this.roomY - this.roomYChange; y !== this.roomY + this.roomYChange*this.currentRoomHeight + this.roomYChange; y += this.roomYChange){
+      for (let x = this.roomX - this.roomXChange; x !== this.roomX + this.roomXChange*this.currentRoomWidth + this.roomXChange; x += this.roomXChange){
 
         if (x <= 0 || x >= this.mapSize || y <= 0 || y >= this.mapSize) return false;
 
-        if (this.map[y][x] !== "#") return false;
-        
-        
+        if (this.map[y][x] === ".") return false;
+
+       
        
 
       }
@@ -246,6 +264,21 @@ class Map{
     
   }
 
+  placeStair(){
+    while(this.map[this.stairY][this.stairX] !== "."){
+      this.stairY = Math.floor(random(0, this.mapSize));
+      this.stairX = Math.floor(random(0, this.mapSize));
+    }
+    this.map[this.stairY][this.stairX] = "<";
+
+  }
+
+  placeEntities(){
+    
+  }
+
+  
+
   generateDungeon(iterations){
  
     
@@ -255,7 +288,7 @@ class Map{
       this.addCorridor();
       this.placeRoom();
     }
-    
+    this.placeStair();
   }
 
 
@@ -265,10 +298,22 @@ class Map{
     textSize(this.textSize);
     for (let y = 0; y < size; y++){
       for (let x = 0; x < size; x++){
+        fill(183, 150, 124);
         text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
       }
     }
   }
+
+ 
+
+}
+
+class Character{
+  constructor(){
+    this.charY;
+    this.charX;
+  }
+
 
 }
 
@@ -277,6 +322,7 @@ class Map{
 
 
 let map1;
+let char1;
 function setup() {
   createCanvas(windowWidth, windowHeight);
   map1 = new Map();
@@ -286,11 +332,11 @@ function setup() {
   map1.potentialRoom();
   map1.placeRoom();
   */
-  map1.generateDungeon(5);
+  map1.generateDungeon(10);
 }
 
 function draw() {
-  background(220);
+  background(0);
  
   map1.drawMap(map1.mapSize);
   
