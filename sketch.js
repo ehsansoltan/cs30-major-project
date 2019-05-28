@@ -273,8 +273,14 @@ class Map{
 
   }
 
+  addEntities(){
+    this.entities.push(new Character);
+  }
+
   placeEntities(){
-    
+    for (let entity = 0; entity < this.entities.length; entity++){
+      this.map[this.entities[entity].y][this.entities[entity].x] = this.entities[entity].avatar;
+    }
   }
 
   
@@ -310,9 +316,19 @@ class Map{
 
 class Character{
   constructor(){
-    this.charY;
-    this.charX;
+    this.y = 25;
+    this.x = 25;
+    this.currentTile;
+    this.avatar = "@";
+
+    this.health;
+    this.weapon;
+
   }
+
+
+
+
 
 
 }
@@ -333,6 +349,8 @@ function setup() {
   map1.placeRoom();
   */
   map1.generateDungeon(10);
+  map1.addEntities();
+  map1.placeEntities();
 }
 
 function draw() {
