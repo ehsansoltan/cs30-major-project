@@ -38,13 +38,6 @@ class Map{
     this.entities = [];
 
 
-   
-
-    
-
-    
-    
-
 
   }
 
@@ -283,6 +276,13 @@ class Map{
     }
   }
 
+  passTurn(){
+    for (let entity = 0; entity < this.entities.length; entity++){
+      this.entities[entity].move(this.map);
+
+    }
+  }
+
   
 
   generateDungeon(iterations){
@@ -318,12 +318,62 @@ class Character{
   constructor(){
     this.y = 25;
     this.x = 25;
-    this.currentTile;
+    this.currentTile = ".";
     this.avatar = "@";
+
+    this.moveDirection = "stationary";
+    this.yChange = 0;
+    this.xChange = 0;
+
 
     this.health;
     this.weapon;
 
+  }
+
+  changeMoveDirection(direction){
+
+    if (direction === "up"){
+      this.yChange = -1;
+      this.xChange = 0;
+      this.moveDirection = "up";
+
+    }
+    if (direction === "down"){
+      this.yChange = 1;
+      this.xChange = 0;
+      this.moveDirection = "down";
+
+    }
+    if (direction === "left"){
+      this.yChange = 0;
+      this.xChange = -1;
+      this.moveDirection = "left";
+
+    }
+    if (direction === "right"){
+      this.yChange = 0;
+      this.xChange = 1;
+      this.moveDirection = "right";
+
+    }
+
+  }
+
+  move(map){
+    if (0 < this.x + this.xChange && 50 > this.x + this.xChange && 0 < this.y + this.yChange && 50 > this.y + this.yChange){
+      if (map[this.y + this.yChange][this.x + this.xChange] !== "#"){
+        map[this.y][this.x] = this.currentTile;
+        this.y += this.yChange;
+        this.x += this.xChange;
+        this.currentTile = map[this.y][this.x];
+        this.yChange = 0;
+        this.Change = 0;
+        this.moveDirection = "stationary";
+        
+      }
+    }
+  
   }
 
 
@@ -335,10 +385,36 @@ class Character{
 
 
 
-
-
 let map1;
-let char1;
+
+
+function keyPressed(){
+  if (keyCode === RIGHT_ARROW){
+    map1.entities[0].changeMoveDirection("right");
+    map1.passTurn();
+    
+  }
+  if (keyCode === LEFT_ARROW){
+    map1.entities[0].changeMoveDirection("left");
+    map1.passTurn();
+    
+  }
+  if (keyCode === UP_ARROW){
+    map1.entities[0].changeMoveDirection("up");
+    map1.passTurn();
+    
+  }
+  if (keyCode === DOWN_ARROW){
+    map1.entities[0].changeMoveDirection("down");
+    map1.passTurn();
+    
+  }
+}
+
+
+
+
+
 function setup() {
   createCanvas(windowWidth, windowHeight);
   map1 = new Map();
@@ -355,7 +431,8 @@ function setup() {
 
 function draw() {
   background(0);
- 
+
+  map1.placeEntities();
   map1.drawMap(map1.mapSize);
   
 
