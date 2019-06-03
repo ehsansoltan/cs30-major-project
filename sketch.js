@@ -276,6 +276,22 @@ class Map{
     }
   }
 
+  resetMap(){
+    this.map = [];
+    this.createEmptyMap(this.mapSize);
+    this.placeSeedRoom(this.entities[0].x, this.entities[0].y);
+    this.generateDungeon(10);
+    this.entities[0].currentTile = ".";
+    this.placeStair();
+
+  }
+
+  checkIfOnStair(){
+    if (this.entities[0].currentTile === "<"){
+      this.resetMap();
+    } 
+  }
+
   passTurn(){
     for (let entity = 0; entity < this.entities.length; entity++){
       this.entities[entity].move(this.map);
@@ -324,9 +340,10 @@ class Character{
     this.moveDirection = "stationary";
     this.yChange = 0;
     this.xChange = 0;
+    this.lastDirection = "";
 
 
-    this.health;
+    this.health = 10;
     this.weapon;
 
   }
@@ -376,6 +393,20 @@ class Character{
   
   }
 
+  checkDeadEnd(direction, messageObject){
+    if (this.currentTile === "+"){
+      if (this.moveDirection === direction){
+        messageObject.addDeadEndMessage();
+
+      }
+    }
+     
+
+    
+  }
+
+  
+
 
 
 
@@ -383,30 +414,98 @@ class Character{
 
 }
 
+class Item{
+  constructor(){
+    this.name = "iron sword";
+    this.power = 5;
+  }
+}
+
+class Messages{
+  constructor(){
+    this.y = 600;
+    this.currentMessages = [];
+  }
+
+  clearMessages(){
+    this.currentMessages = [];
+  }
+
+  addMoveMessage(direction){
+    this.currentMessages.push("You move " + direction + ".");
+  }
+
+  addDeadEndMessage(){
+    this.currentMessages.push("It's a dead end!");
+  }
+
+
+
+  displayMessages(){
+    for (let message = 0; message < this.currentMessages.length; message++){
+      textSize(15);
+      text(this.currentMessages[message], 0, this.y + 15*message);
+
+    }
+  }
+
+}
+
+class Stats{
+  constructor(){
+    this.x = 650;
+
+  }
+
+  displayHealth(character){
+    text("Health: " + character.health, 630, 50);
+  }
+
+  drawStats(){
+    textSize(15);
+    this.displayHealth(map1.entities[0]);
+    
+  }
+  
+}
+
 
 
 let map1;
-
-
+let messages1;
+let stats1;
 function keyPressed(){
   if (keyCode === RIGHT_ARROW){
     map1.entities[0].changeMoveDirection("right");
     map1.passTurn();
+    messages1.clearMessages();
+    messages1.addMoveMessage("right");
+    map1.entities[0].checkDeadEnd("right", messages1);
     
   }
   if (keyCode === LEFT_ARROW){
     map1.entities[0].changeMoveDirection("left");
     map1.passTurn();
+    messages1.clearMessages();
+    messages1.addMoveMessage("left");
+    map1.entities[0].checkDeadEnd("left", messages1);
     
   }
   if (keyCode === UP_ARROW){
     map1.entities[0].changeMoveDirection("up");
     map1.passTurn();
+    messages1.clearMessages();
+    messages1.addMoveMessage("up");
+    map1.entities[0].checkDeadEnd("up", messages1);
     
   }
   if (keyCode === DOWN_ARROW){
     map1.entities[0].changeMoveDirection("down");
     map1.passTurn();
+    messages1.clearMessages();
+    messages1.addMoveMessage("down");
+    map1.entities[0].checkDeadEnd("down", messages1);
+    
     
   }
 }
@@ -418,12 +517,11 @@ function keyPressed(){
 function setup() {
   createCanvas(windowWidth, windowHeight);
   map1 = new Map();
+  messages1 = new Messages();
+  stats1 = new Stats();
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
-  /* map1.addCorridor();
-  map1.potentialRoom();
-  map1.placeRoom();
-  */
+  
   map1.generateDungeon(10);
   map1.addEntities();
   map1.placeEntities();
@@ -434,6 +532,10 @@ function draw() {
 
   map1.placeEntities();
   map1.drawMap(map1.mapSize);
+  map1.checkIfOnStair();
+  messages1.displayMessages();
+  stats1.drawStats();
+
   
 
 }
