@@ -36,6 +36,9 @@ class Map{
     this.stairY = 0;
 
     this.entities = [];
+    this.items = [];
+    this.maxItemsOnMap = 5;
+    this.itemsOnMap;
 
 
 
@@ -276,6 +279,34 @@ class Map{
     }
   }
 
+  addItems(){
+    this.itemsOnMap = Math.floor(random(this.maxItemsOnMap));
+    for (let item = 0; item < this.itemsOnMap; item++){
+      this.items.push(new Weapon);
+    }
+
+  }
+
+  placeItems(){
+    for (let item = 0; item < this.items.length; item++){
+      this.items[item].y = Math.floor(random(this.mapSize));
+      this.items[item].x = Math.floor(random(this.mapSize));
+      while (this.map[this.items[item].y][this.items[item].x] !== "."){
+        this.items[item].y = Math.floor(random(this.mapSize));
+        this.items[item].x = Math.floor(random(this.mapSize));
+      }
+      this.map[this.items[item].y][this.items[item].x] = this.items[item].avatar;
+ 
+    }
+  }
+
+  pickupItems(){
+    for (let item = 0; item < this.items.length; item++){
+      this.items[item].checkIfFound(this.entities[0], this.items, item, this.map);
+    }
+  }
+
+
   resetMap(){
     this.map = [];
     this.createEmptyMap(this.mapSize);
@@ -311,6 +342,8 @@ class Map{
       this.placeRoom();
     }
     this.placeStair();
+    this.addItems();
+    this.placeItems();
   }
 
 
@@ -344,7 +377,9 @@ class Character{
 
 
     this.health = 10;
-    this.weapon;
+    this.weapon = "fists";
+    this.attack = 1;
+    this.weaponAttack = 0;
 
   }
 
@@ -400,10 +435,9 @@ class Character{
 
       }
     }
-     
-
-    
   }
+
+
 
   
 
@@ -414,10 +448,33 @@ class Character{
 
 }
 
-class Item{
+class Weapon{
   constructor(){
-    this.name = "iron sword";
-    this.power = 5;
+    this.avatar = "*";
+    this.maxPower = 15;
+    
+
+    this.possibleMaterials = ["iron", "golden", "bronze", "darksteel", "crystal"];
+    this.possibleWeapons = ["sword", "spear", "scimitar", "halberd", "mace"];
+    this.name = this.possibleMaterials[Math.floor(random(this.possibleMaterials.length))] + " " + this.possibleWeapons[Math.floor(random(this.possibleWeapons.length))];
+    this.power = Math.floor(random(this.maxPower));
+    
+
+    this.x;
+    this.y;
+  }
+
+  checkIfFound(character, itemArray, itemArrayIndex){
+    if (this.x === character.x && this.y === character.y){
+      character.weapon = this.name;
+      character.weaponAttack = this.power;
+      character.currentTile = ".";
+      messages1.addWeaponFoundMessage(itemArray[itemArrayIndex]);
+      itemArray.splice(itemArrayIndex, 1);
+
+    }
+
+
   }
 }
 
@@ -437,6 +494,10 @@ class Messages{
 
   addDeadEndMessage(){
     this.currentMessages.push("It's a dead end!");
+  }
+
+  addWeaponFoundMessage(weapon){
+    this.currentMessages.push("You found a " + weapon.name);
   }
 
 
@@ -461,10 +522,19 @@ class Stats{
     text("Health: " + character.health, 630, 50);
   }
 
+  displayAttack(character){
+    text("Attack: " + character.attack  + " (+ " + character.weaponAttack + ")", 630, 70);
+  }
+
+  displayWeapon(character){
+    text("Weapon: " + character.weapon, 630, 90);
+  }
+
   drawStats(){
     textSize(15);
     this.displayHealth(map1.entities[0]);
-    
+    this.displayAttack(map1.entities[0]);
+    this.displayWeapon(map1.entities[0]);
   }
   
 }
@@ -533,6 +603,7 @@ function draw() {
   map1.placeEntities();
   map1.drawMap(map1.mapSize);
   map1.checkIfOnStair();
+  map1.pickupItems();
   messages1.displayMessages();
   stats1.drawStats();
 
