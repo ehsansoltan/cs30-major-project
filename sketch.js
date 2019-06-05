@@ -452,10 +452,11 @@ class Weapon{
   constructor(){
     this.avatar = "*";
     this.maxPower = 15;
+    this.found = false;
     
 
-    this.possibleMaterials = ["iron", "golden", "bronze", "darksteel", "crystal"];
-    this.possibleWeapons = ["sword", "spear", "scimitar", "halberd", "mace"];
+    this.possibleMaterials = ["iron", "copper", "bronze", "darksteel", "crystal", "kingslayer", "dragonslayer"];
+    this.possibleWeapons = ["longsword", "spear", "scimitar", "halberd", "mace"];
     this.name = this.possibleMaterials[Math.floor(random(this.possibleMaterials.length))] + " " + this.possibleWeapons[Math.floor(random(this.possibleWeapons.length))];
     this.power = Math.floor(random(this.maxPower));
     
@@ -466,10 +467,13 @@ class Weapon{
 
   checkIfFound(character, itemArray, itemArrayIndex){
     if (this.x === character.x && this.y === character.y){
-      character.weapon = this.name;
+     /* character.weapon = this.name;
       character.weaponAttack = this.power;
       character.currentTile = ".";
+      */
+
       messages1.addWeaponFoundMessage(itemArray[itemArrayIndex]);
+      messages1.weaponFoundDecision(itemArray[itemArrayIndex], character);
       itemArray.splice(itemArrayIndex, 1);
 
     }
@@ -498,6 +502,25 @@ class Messages{
 
   addWeaponFoundMessage(weapon){
     this.currentMessages.push("You found a " + weapon.name);
+  }
+
+  weaponFoundDecision(weapon, character){
+    text("Would you like to replace your " + character.weapon + " with this " + weapon.name + " (" + weapon.power + " atk)? y/n", 0, 700);
+    if(weapon.found === false){
+      if (keyIsPressed && key === "y"){
+        character.weapon = this.name;
+        character.weaponAttack = this.power;
+        character.currentTile = ".";
+        weapon.found = true;
+      }
+      if (keyIsPressed && key === "n"){
+        character.currentTile = ".";
+        weapon.found = true;
+      }
+      else {
+        text("Unclear command.", 0, 715);
+      }
+    }
   }
 
 
