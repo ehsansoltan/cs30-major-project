@@ -369,6 +369,7 @@ class Character{
     this.x = 25;
     this.currentTile = ".";
     this.avatar = "@";
+    this.state = "standard";
 
     this.moveDirection = "stationary";
     this.yChange = 0;
@@ -380,6 +381,8 @@ class Character{
     this.weapon = "fists";
     this.attack = 1;
     this.weaponAttack = 0;
+
+    this.itemPendingPickup;
 
   }
 
@@ -467,13 +470,11 @@ class Weapon{
 
   checkIfFound(character, itemArray, itemArrayIndex){
     if (this.x === character.x && this.y === character.y){
-     /* character.weapon = this.name;
-      character.weaponAttack = this.power;
-      character.currentTile = ".";
-      */
+     
 
       messages1.addWeaponFoundMessage(itemArray[itemArrayIndex]);
       messages1.weaponFoundDecision(itemArray[itemArrayIndex], character);
+      messages1.weaponFoundQuestion();
       itemArray.splice(itemArrayIndex, 1);
 
     }
@@ -504,24 +505,23 @@ class Messages{
     this.currentMessages.push("You found a " + weapon.name);
   }
 
-  weaponFoundDecision(weapon, character){
-    text("Would you like to replace your " + character.weapon + " with this " + weapon.name + " (" + weapon.power + " atk)? y/n", 0, 700);
-    if(weapon.found === false){
-      if (keyIsPressed && key === "y"){
-        character.weapon = this.name;
-        character.weaponAttack = this.power;
-        character.currentTile = ".";
-        weapon.found = true;
-      }
-      if (keyIsPressed && key === "n"){
-        character.currentTile = ".";
-        weapon.found = true;
-      }
-      else {
-        text("Unclear command.", 0, 715);
-      }
+  weaponFoundQuestion(){
+    if (map1.entities[0].state === "weaponPickup"){
+      this.currentMessages.push("Would you like to replace your " + map1.entities[0].weapon + " with this " + map1.entities[0].itemPendingPickup.name + " (" + map1.entities[0].itemPendingPickup.power + " atk)? y/n");
     }
   }
+
+  addCustomMessage(message){
+    this.currentMessages.push(message);
+  }
+
+  
+  weaponFoundDecision(weapon, character){
+    character.itemPendingPickup = weapon;
+    character.state = "weaponPickup";
+  }
+
+
 
 
 
@@ -531,6 +531,7 @@ class Messages{
       text(this.currentMessages[message], 0, this.y + 15*message);
 
     }
+    
   }
 
 }
@@ -568,38 +569,67 @@ let map1;
 let messages1;
 let stats1;
 function keyPressed(){
-  if (keyCode === RIGHT_ARROW){
-    map1.entities[0].changeMoveDirection("right");
-    map1.passTurn();
-    messages1.clearMessages();
-    messages1.addMoveMessage("right");
-    map1.entities[0].checkDeadEnd("right", messages1);
-    
+
+  if (map1.entities[0].state === "standard"){
+    if (keyCode === RIGHT_ARROW){
+      map1.entities[0].changeMoveDirection("right");
+      map1.passTurn();
+      messages1.clearMessages();
+      messages1.addMoveMessage("right");
+      map1.entities[0].checkDeadEnd("right", messages1);
+      
+    }
+    if (keyCode === LEFT_ARROW){
+      map1.entities[0].changeMoveDirection("left");
+      map1.passTurn();
+      messages1.clearMessages();
+      messages1.addMoveMessage("left");
+      map1.entities[0].checkDeadEnd("left", messages1);
+      
+    }
+    if (keyCode === UP_ARROW){
+      map1.entities[0].changeMoveDirection("up");
+      map1.passTurn();
+      messages1.clearMessages();
+      messages1.addMoveMessage("up");
+      map1.entities[0].checkDeadEnd("up", messages1);
+      
+    }
+    if (keyCode === DOWN_ARROW){
+      map1.entities[0].changeMoveDirection("down");
+      map1.passTurn();
+      messages1.clearMessages();
+      messages1.addMoveMessage("down");
+      map1.entities[0].checkDeadEnd("down", messages1);
+    }
+
   }
-  if (keyCode === LEFT_ARROW){
-    map1.entities[0].changeMoveDirection("left");
-    map1.passTurn();
-    messages1.clearMessages();
-    messages1.addMoveMessage("left");
-    map1.entities[0].checkDeadEnd("left", messages1);
-    
-  }
-  if (keyCode === UP_ARROW){
-    map1.entities[0].changeMoveDirection("up");
-    map1.passTurn();
-    messages1.clearMessages();
-    messages1.addMoveMessage("up");
-    map1.entities[0].checkDeadEnd("up", messages1);
-    
-  }
-  if (keyCode === DOWN_ARROW){
-    map1.entities[0].changeMoveDirection("down");
-    map1.passTurn();
-    messages1.clearMessages();
-    messages1.addMoveMessage("down");
-    map1.entities[0].checkDeadEnd("down", messages1);
-    
-    
+  
+}
+
+function keyTyped(){
+  if (map1.entities[0].state === "weaponPickup"){
+    if (key === 'y'){
+      map1.entities[0].weapon = map1.entities[0].itemPendingPickup.name;
+      map1.entities[0].weaponAttack = map1.entities[0].itemPendingPickup.power;
+      map1.entities[0].currentTile = ".";
+      map1.entities[0].itemPendingPickup.found = true;
+      map1.entities[0].state = "standard";
+      messages1.addCustomMessage("You picked up the " + map1.entities[0].itemPendingPickup.name + ".");
+
+    }
+    else if (key === 'n'){
+      map1.entities[0].currentTile = ".";
+      map1.entities[0].itemPendingPickup.found = true;
+      map1.entities[0].state = "standard";
+      messages1.addCustomMessage("You discarded the " + map1.entities[0].itemPendingPickup.name + ".");
+
+
+    }
+    else{
+      messages1.addCustomMessage("Incorrect command.");
+
+    }
   }
 }
 
