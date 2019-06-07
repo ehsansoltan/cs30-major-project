@@ -354,7 +354,8 @@ class Map{
     for (let y = 0; y < size; y++){
       for (let x = 0; x < size; x++){
         fill(183, 150, 124);
-        text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
+        if (this.map[y][x] !== "+") text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
+         else {text(".", x * this.mapTileSize, y * this.mapTileSize);}
       }
     }
   }
@@ -451,6 +452,26 @@ class Character{
 
 }
 
+class Monster{
+  constructor(){
+    this.y;
+    this.x;
+    this.currentTile;
+    this.avatar;
+
+    this.possibleNames = ["goblin", "minotaur", "black knight", "thief", "orc", "dwarf", "black orc"];
+    this.name;
+
+    this.moveDirection;
+    this.yChange;
+    this.xChange;
+
+    this.health;
+    this.attack;
+    this.playerInRange;
+  }
+}
+
 class Weapon{
   constructor(){
     this.avatar = "*";
@@ -458,10 +479,11 @@ class Weapon{
     this.found = false;
     
 
-    this.possibleMaterials = ["iron", "copper", "bronze", "darksteel", "crystal", "kingslayer", "dragonslayer"];
-    this.possibleWeapons = ["longsword", "spear", "scimitar", "halberd", "mace"];
+    this.possibleMaterials = ["iron", "copper", "bronze", "wooden", "crystal", "kingslayer", "dragonslayer"];
+    this.possibleWeapons = ["longsword", "spear", "scimitar", "halberd", "mace", "warhammer", "dagger"];
     this.name = this.possibleMaterials[Math.floor(random(this.possibleMaterials.length))] + " " + this.possibleWeapons[Math.floor(random(this.possibleWeapons.length))];
     this.power = Math.floor(random(this.maxPower));
+    if (this.power < 4) this.name += " (broken)";
     
 
     this.x;
@@ -502,7 +524,7 @@ class Messages{
   }
 
   addWeaponFoundMessage(weapon){
-    this.currentMessages.push("You found a " + weapon.name);
+    this.currentMessages.push("You found a " + weapon.name + ".");
   }
 
   weaponFoundQuestion(){
