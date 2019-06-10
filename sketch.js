@@ -40,6 +40,9 @@ class Map{
     this.maxItemsOnMap = 5;
     this.itemsOnMap;
 
+    this.maxMonstersOnMap = 5;
+    this.monstersOnMap;
+
 
 
   }
@@ -271,6 +274,8 @@ class Map{
 
   addEntities(){
     this.entities.push(new Character);
+    this.addMonsters();
+    this.placeMonsters();
   }
 
   placeEntities(){
@@ -280,6 +285,7 @@ class Map{
   }
 
   addItems(){
+    this.items = [];
     this.itemsOnMap = Math.floor(random(this.maxItemsOnMap));
     for (let item = 0; item < this.itemsOnMap; item++){
       this.items.push(new Weapon);
@@ -306,6 +312,29 @@ class Map{
     }
   }
 
+  addMonsters(){
+    this.entities.splice(1);
+    this.monstersOnMap = Math.floor(random(this.maxMonstersOnMap));
+    for (let monster = 0; monster < this.monstersOnMap; monster++){
+      this.entities.push(new Monster);
+    }
+  }
+
+  placeMonsters(){
+    for (let monster = 1; monster < this.entities.length; monster++){
+      this.entities[monster].y = Math.floor(random(this.mapSize));
+      this.entities[monster].x = Math.floor(random(this.mapSize));
+      while (this.map[this.entities[monster].y][this.entities[monster].x] !== "."){
+        this.entities[monster].y = Math.floor(random(this.mapSize));
+        this.entities[monster].x = Math.floor(random(this.mapSize));
+      }
+      
+ 
+    }
+  }
+
+
+
 
   resetMap(){
     this.map = [];
@@ -314,7 +343,9 @@ class Map{
     this.generateDungeon(10);
     this.entities[0].currentTile = ".";
     this.placeStair();
-
+    this.addMonsters();
+    this.placeMonsters();
+    
   }
 
   checkIfOnStair(){
@@ -344,6 +375,8 @@ class Map{
     this.placeStair();
     this.addItems();
     this.placeItems();
+    
+
   }
 
 
@@ -418,7 +451,7 @@ class Character{
 
   move(map){
     if (0 < this.x + this.xChange && 50 > this.x + this.xChange && 0 < this.y + this.yChange && 50 > this.y + this.yChange){
-      if (map[this.y + this.yChange][this.x + this.xChange] !== "#"){
+      if (map[this.y + this.yChange][this.x + this.xChange] === "." || map[this.y + this.yChange][this.x + this.xChange] === "+" || map[this.y + this.yChange][this.x + this.xChange] === "<" || map[this.y + this.yChange][this.x + this.xChange] === "*"){
         map[this.y][this.x] = this.currentTile;
         this.y += this.yChange;
         this.x += this.xChange;
@@ -456,19 +489,54 @@ class Monster{
   constructor(){
     this.y;
     this.x;
-    this.currentTile;
-    this.avatar;
+    this.currentTile = ".";
+    
 
-    this.possibleNames = ["goblin", "minotaur", "black knight", "thief", "orc", "dwarf", "black orc"];
-    this.name;
+    //[name, avatar, health, attack]
+    this.possibleTypes = [["goblin", "G", 5, 2], ["troll", "T", 10, 4], ["orc", "O", 8, 3], ["daemon", "D", 5, 4]];
+    this.type = this.possibleTypes[Math.floor(random(this.possibleTypes.length))];
+    this.name = this.type[0];
+    this.avatar = this.type[1];
 
     this.moveDirection;
-    this.yChange;
-    this.xChange;
+    this.yChange = 0;
+    this.xChange = 0;
 
-    this.health;
-    this.attack;
+    this.health = this.type[2];
+    this.attack = this.type[3];
     this.playerInRange;
+  }
+
+  pickMoveDirection(player){
+    if (player.x < this.x){
+      this.xChange = -1;
+      this.yChange = 0;
+    }
+    if (player.x > this.x){
+      this.xChange = 1;
+      this.yChange = 0;
+    }
+    if (player.y < this.y){
+      this.yChange = -1;
+      this.xChange = 0;
+    }
+    if (player.y > this.y){
+      this.yChange = 1;
+      this.xChange = 0;
+    }
+
+  }
+
+  move(){
+    this.pickMoveDirection(map1.entities[0]);
+    if (map1.map[this.y + this.yChange][this.x + this.xChange] === "." || map1.map[this.y + this.yChange][this.x + this.xChange] === "+"){
+      map1.map[this.y][this.x] = this.currentTile;
+      this.y += this.yChange;
+      this.x += this.xChange;
+      map1.map[this.y][this.x] = this.avatar;
+    }
+
+
   }
 }
 
@@ -598,7 +666,7 @@ function keyPressed(){
       map1.passTurn();
       messages1.clearMessages();
       messages1.addMoveMessage("right");
-      map1.entities[0].checkDeadEnd("right", messages1);
+      //map1.entities[0].checkDeadEnd("right", messages1);
       
     }
     if (keyCode === LEFT_ARROW){
@@ -606,7 +674,7 @@ function keyPressed(){
       map1.passTurn();
       messages1.clearMessages();
       messages1.addMoveMessage("left");
-      map1.entities[0].checkDeadEnd("left", messages1);
+      //map1.entities[0].checkDeadEnd("left", messages1);
       
     }
     if (keyCode === UP_ARROW){
@@ -614,7 +682,7 @@ function keyPressed(){
       map1.passTurn();
       messages1.clearMessages();
       messages1.addMoveMessage("up");
-      map1.entities[0].checkDeadEnd("up", messages1);
+      //map1.entities[0].checkDeadEnd("up", messages1);
       
     }
     if (keyCode === DOWN_ARROW){
@@ -622,7 +690,7 @@ function keyPressed(){
       map1.passTurn();
       messages1.clearMessages();
       messages1.addMoveMessage("down");
-      map1.entities[0].checkDeadEnd("down", messages1);
+     // map1.entities[0].checkDeadEnd("down", messages1);
     }
 
   }
