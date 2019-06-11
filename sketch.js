@@ -456,10 +456,14 @@ class Character{
         this.y += this.yChange;
         this.x += this.xChange;
         this.currentTile = map[this.y][this.x];
+        map[this.y][this.x] = this.avatar;
         this.yChange = 0;
         this.Change = 0;
         this.moveDirection = "stationary";
         
+      }
+      else{
+        this.attack(map);
       }
     }
   
@@ -472,6 +476,16 @@ class Character{
 
       }
     }
+  }
+
+  attack(map){
+    for (let entity = 1; entity < map.entities.length; entity++){
+      if (this.y + this.yChange === map.entities[entity].y && this.x + this.xChange === map.entities[entity].x){
+        map.entities[entity].health -= (this.attack + this.weaponAttack);
+        messages1.addCustomMessage("You attack the " + map.entities[entity].name + " dealing " + this.attack + this.weaponAttack + "damage. (" + map.entities[entity].health + " health)");
+      }
+    }
+
   }
 
 
@@ -527,12 +541,20 @@ class Monster{
 
   }
 
+  inRange(player){
+    if (Math.abs(player.x - this.x) < 5 && Math.abs(player.y - this.y) < 5) return true;
+    else return false;
+  }
+
   move(){
     this.pickMoveDirection(map1.entities[0]);
     if (map1.map[this.y + this.yChange][this.x + this.xChange] === "." || map1.map[this.y + this.yChange][this.x + this.xChange] === "+"){
       map1.map[this.y][this.x] = this.currentTile;
-      this.y += this.yChange;
-      this.x += this.xChange;
+      if (this.inRange(map1.entities[0]) === true){
+        this.y += this.yChange;
+        this.x += this.xChange;
+      }
+     
       map1.map[this.y][this.x] = this.avatar;
     }
 
