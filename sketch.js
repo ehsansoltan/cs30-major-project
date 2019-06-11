@@ -449,6 +449,9 @@ class Character{
 
   }
 
+
+  
+
   move(map){
     if (0 < this.x + this.xChange && 50 > this.x + this.xChange && 0 < this.y + this.yChange && 50 > this.y + this.yChange){
       if (map[this.y + this.yChange][this.x + this.xChange] === "." || map[this.y + this.yChange][this.x + this.xChange] === "+" || map[this.y + this.yChange][this.x + this.xChange] === "<" || map[this.y + this.yChange][this.x + this.xChange] === "*"){
@@ -459,11 +462,15 @@ class Character{
         map[this.y][this.x] = this.avatar;
         this.yChange = 0;
         this.Change = 0;
+        messages1.addMoveMessage(this.moveDirection);
         this.moveDirection = "stationary";
         
       }
       else{
-        this.attack(map);
+        messages1.addCustomMessage("fuck you");
+        
+
+      
       }
     }
   
@@ -479,6 +486,7 @@ class Character{
   }
 
   attack(map){
+    messages1.addCustomMessage("dsff");
     for (let entity = 1; entity < map.entities.length; entity++){
       if (this.y + this.yChange === map.entities[entity].y && this.x + this.xChange === map.entities[entity].x){
         map.entities[entity].health -= (this.attack + this.weaponAttack);
@@ -487,15 +495,6 @@ class Character{
     }
 
   }
-
-
-
-  
-
-
-
-
-
 
 }
 
@@ -687,7 +686,7 @@ function keyPressed(){
       map1.entities[0].changeMoveDirection("right");
       map1.passTurn();
       messages1.clearMessages();
-      messages1.addMoveMessage("right");
+      //messages1.addMoveMessage("right");
       //map1.entities[0].checkDeadEnd("right", messages1);
       
     }
