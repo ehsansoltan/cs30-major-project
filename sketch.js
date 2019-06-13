@@ -31,6 +31,7 @@ class Map{
     this.corridorMaxLength = 12;
     this.corridorMinLength = 5;
     this.corridorLength;
+    this.clipped;
 
     this.stairX = 0;
     this.stairY = 0;
@@ -155,9 +156,10 @@ class Map{
 
 
         //changing the tile back to "#" and ends corridor if adjacent and parallel to a room
+        
        
         if (this.corridorDirection === "up" || this.corridorDirection === "down"){
-          if (this.map[this.corridorY][this.corridorX -1] === "." || this.map[this.corridorY][this.corridorX + 1] === "."){
+          if (this.map[this.corridorY + 1][this.corridorX -1] === "+" && this.map[this.corridorY - 1][this.corridorX -1] === "+" || this.map[this.corridorY + 1][this.corridorX + 1] === "+" && this.map[this.corridorY - 1][this.corridorX + 1] === "+"){
             this.map[this.corridorY][this.corridorX] = "#";
             this.corridorLength = 0;
 
@@ -166,7 +168,7 @@ class Map{
        
         }
         else if (this.corridorDirection === "left" || this.corridorDirection === "right"){
-          if (this.map[this.corridorY - 1][this.corridorX] === "." || this.map[this.corridorY + 1][this.corridorX] === "."){
+          if (this.map[this.corridorY - 1][this.corridorX + 1] === "+" && this.map[this.corridorY - 1][this.corridorX - 1] === "+" || this.map[this.corridorY + 1][this.corridorX + 1] === "+" && this.map[this.corridorY + 1][this.corridorX - 1] === "+"){
             this.map[this.corridorY][this.corridorX] = "#";
             this.corridorLength = 0;
 
@@ -234,7 +236,10 @@ class Map{
 
         if (x <= 0 || x >= this.mapSize || y <= 0 || y >= this.mapSize) return false;
 
-        if (this.map[y][x] === ".") return false;
+        if (this.map[y][x] === "."){
+          this.clipCorridor();
+          return false;
+        }
 
        
        
@@ -260,6 +265,11 @@ class Map{
       this.pickCorridorDirectionAndLength();
       this.addCorridor();
     }
+    
+  }
+
+  clipCorridor(){
+    
     
   }
 
@@ -354,7 +364,7 @@ class Map{
     } 
   }
 
-  passTurn(){
+  passTurn(messageObject){
     for (let entity = 0; entity < this.entities.length; entity++){
       this.entities[entity].move(this.map);
 
@@ -372,6 +382,7 @@ class Map{
       this.addCorridor();
       this.placeRoom();
     }
+    this.clipCorridor();
     this.placeStair();
     this.addItems();
     this.placeItems();
@@ -386,9 +397,37 @@ class Map{
     textSize(this.textSize);
     for (let y = 0; y < size; y++){
       for (let x = 0; x < size; x++){
-        fill(183, 150, 124);
-        if (this.map[y][x] !== "+") text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
-         else {text(".", x * this.mapTileSize, y * this.mapTileSize);}
+        if (this.map[y][x] === "#" || this.map[y][x] === "." || this.map[y][x] === "<") {
+          fill(183, 150, 124);
+          text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
+        }
+        
+         else if (this.map[y][x] === "+") {
+          fill(183, 150, 124);
+          text(".", x * this.mapTileSize, y * this.mapTileSize);
+         }
+
+         else if (this.map[y][x] === "*"){
+          for (let item = 0; item < this.items.length; item++){
+            if (this.items[item].y === y && this.items[item].x === x){
+              fill(this.items[item].color);
+              text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
+
+            }
+          }
+
+         }
+
+         else{
+           for (let entity = 0; entity < this.entities.length; entity++){
+             if (this.entities[entity].y === y && this.entities[entity].x === x){
+               fill(this.entities[entity].color);
+               text(this.map[y][x], x * this.mapTileSize, y * this.mapTileSize);
+
+             }
+           }
+         }
+         
       }
     }
   }
@@ -403,6 +442,7 @@ class Character{
     this.x = 25;
     this.currentTile = ".";
     this.avatar = "@";
+    this.color = [240, 200, 70];
     this.state = "standard";
 
     this.moveDirection = "stationary";
@@ -467,7 +507,7 @@ class Character{
         
       }
       else{
-        messages1.addCustomMessage("fuck you");
+        
         
 
       
@@ -485,16 +525,7 @@ class Character{
     }
   }
 
-  attack(map){
-    messages1.addCustomMessage("dsff");
-    for (let entity = 1; entity < map.entities.length; entity++){
-      if (this.y + this.yChange === map.entities[entity].y && this.x + this.xChange === map.entities[entity].x){
-        map.entities[entity].health -= (this.attack + this.weaponAttack);
-        messages1.addCustomMessage("You attack the " + map.entities[entity].name + " dealing " + this.attack + this.weaponAttack + "damage. (" + map.entities[entity].health + " health)");
-      }
-    }
-
-  }
+  
 
 }
 
@@ -505,43 +536,56 @@ class Monster{
     this.currentTile = ".";
     
 
-    //[name, avatar, health, attack]
-    this.possibleTypes = [["goblin", "G", 5, 2], ["troll", "T", 10, 4], ["orc", "O", 8, 3], ["daemon", "D", 5, 4]];
+    //[name, avatar, health, attack, color, moveRoll]
+    this.possibleTypes = [["goblin", "G", 5, 2, [4, 247, 65], 4], ["troll", "T", 10, 4, [140, 140, 140], 2], ["orc", "O", 8, 3, [11, 140, 26], 3], ["daemon", "D", 5, 4, [188, 0, 0], 3]];
     this.type = this.possibleTypes[Math.floor(random(this.possibleTypes.length))];
     this.name = this.type[0];
     this.avatar = this.type[1];
+    this.color = this.type[4];
 
     this.moveDirection;
+    this.moveRoll = this.type[5];
     this.yChange = 0;
     this.xChange = 0;
 
     this.health = this.type[2];
     this.attack = this.type[3];
+    this.range = 7;
     this.playerInRange;
+    
   }
 
+
   pickMoveDirection(player){
-    if (player.x < this.x){
-      this.xChange = -1;
+    if (Math.floor(random(this.moveRoll)) !== 0){
+      if (player.x < this.x){
+        this.xChange = -1;
+        this.yChange = 0;
+      }
+      if (player.x > this.x){
+        this.xChange = 1;
+        this.yChange = 0;
+      }
+      if (player.y < this.y){
+        this.yChange = -1;
+        this.xChange = 0;
+      }
+      if (player.y > this.y){
+        this.yChange = 1;
+        this.xChange = 0;
+      }
+
+    }
+    else{
+      this.xChange = 0;
       this.yChange = 0;
     }
-    if (player.x > this.x){
-      this.xChange = 1;
-      this.yChange = 0;
-    }
-    if (player.y < this.y){
-      this.yChange = -1;
-      this.xChange = 0;
-    }
-    if (player.y > this.y){
-      this.yChange = 1;
-      this.xChange = 0;
-    }
+    
 
   }
 
   inRange(player){
-    if (Math.abs(player.x - this.x) < 5 && Math.abs(player.y - this.y) < 5) return true;
+    if (Math.abs(player.x - this.x) < this.range && Math.abs(player.y - this.y) < this.range) return true;
     else return false;
   }
 
@@ -564,14 +608,15 @@ class Monster{
 class Weapon{
   constructor(){
     this.avatar = "*";
-    this.maxPower = 15;
     this.found = false;
     
-
-    this.possibleMaterials = ["iron", "copper", "bronze", "wooden", "crystal", "kingslayer", "dragonslayer"];
+    //[name, max power, color]
+    this.possibleMaterials = [["wooden", 4, [114, 63, 0]], ["copper", 7, [211, 151, 12]], ["bronze", 10, [231, 169, 29]], ["iron", 12, [200, 200, 200]], ["dragonslayer", 18, [147, 0, 0]]];
     this.possibleWeapons = ["longsword", "spear", "scimitar", "halberd", "mace", "warhammer", "dagger"];
-    this.name = this.possibleMaterials[Math.floor(random(this.possibleMaterials.length))] + " " + this.possibleWeapons[Math.floor(random(this.possibleWeapons.length))];
-    this.power = Math.floor(random(this.maxPower));
+    this.type = this.possibleMaterials[Math.floor(random(this.possibleMaterials.length))]
+    this.name = this.type[0] + " " + this.possibleWeapons[Math.floor(random(this.possibleWeapons.length))];
+    this.power = Math.floor(random(this.type[1]));
+    this.color = this.type[2];
     if (this.power < 4) this.name += " (broken)";
     
 
@@ -684,9 +729,9 @@ function keyPressed(){
   if (map1.entities[0].state === "standard"){
     if (keyCode === RIGHT_ARROW){
       map1.entities[0].changeMoveDirection("right");
-      map1.passTurn();
+      map1.passTurn(messages1);
       messages1.clearMessages();
-      //messages1.addMoveMessage("right");
+      messages1.addMoveMessage("right");
       //map1.entities[0].checkDeadEnd("right", messages1);
       
     }
