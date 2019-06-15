@@ -801,7 +801,7 @@ function setup() {
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
   
-  map1.generateDungeon(10);
+  map1.generateDungeon(30);
   map1.addEntities();
   map1.placeEntities();
 }
