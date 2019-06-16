@@ -807,8 +807,8 @@ function setup() {
 }
 
 function draw() {
+  
   background(0);
-
   map1.placeEntities();
   map1.drawMap(map1.mapSize);
   map1.checkIfOnStair();
