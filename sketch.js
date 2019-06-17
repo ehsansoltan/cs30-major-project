@@ -1,9 +1,9 @@
-// Project Title
-// Your Name
-// Date
+// Ascii Roguelike
+// Your Ehsan Soltan
+// June. 17, 2019
 //
 // Extra for Experts:
-// - describe what you did to take this project "above and beyond"
+// I fulfilled two of my 
 
 
 class Map{
@@ -12,6 +12,7 @@ class Map{
     this.mapSize = 50;
     this.mapTileSize = 12;
     this.textSize = 18;
+    this.level = 0;
 
     this.currentRoomHeight;
     this.currentRoomWidth;
@@ -43,6 +44,9 @@ class Map{
 
     this.maxMonstersOnMap = 5;
     this.monstersOnMap;
+
+    this.maxPotionsOnMap = 3;
+    this.potionsOnMap;
 
 
 
@@ -296,8 +300,13 @@ class Map{
   addItems(){
     this.items = [];
     this.itemsOnMap = Math.floor(random(this.maxItemsOnMap));
+    this.potionsOnMap = Math.floor(random(this.maxPotionsOnMap));
     for (let item = 0; item < this.itemsOnMap; item++){
       this.items.push(new Weapon);
+    }
+    for (let item = 0; item < this.potionsOnMap; item++){
+      this.items.push(new HealthPotion);
+
     }
 
   }
@@ -319,7 +328,7 @@ class Map{
   //picks up items if the player is on them
   pickupItems(){
     for (let item = 0; item < this.items.length; item++){
-      this.items[item].checkIfFound(this.entities[0], this.items, item, this.map);
+      this.items[item].checkIfFound(this.entities[0], this.items, item);
     }
   }
 
@@ -371,6 +380,7 @@ class Map{
     this.placeStair();
     this.addMonsters();
     this.placeMonsters();
+    this.level++;
     
   }
 
@@ -592,8 +602,9 @@ class Monster{
     this.yChange = 0;
     this.xChange = 0;
 
-    this.health = this.type[2];
-    this.attack = this.type[3];
+    //health and attack scales as per the feedback of my beta tester, Alex
+    this.health = Math.floor(random(this.type[2], this.type[2] + map1.level*3));
+    this.attack = Math.floor(random(this.type[3], this.type[3] + map1.level*3));
     this.range = 7;
     this.playerInRange;
     this.attackSynonyms = ["strikes", "pummels", "kicks", "punches", "slashes", "tackles"];
@@ -700,6 +711,28 @@ class Weapon{
 
 
   }
+}
+
+
+//added health potions as per the recommendation of one of my beta testers, David
+class HealthPotion{
+  constructor(){
+    this.x;
+    this.y;
+    this.avatar = "*";
+    this.color = [0, 0, 255];
+    this.healthGained = Math.floor(random(5, 5 + map1.level*3));
+  }
+
+  //checks if found and heals the player
+  checkIfFound(player, itemArray, itemArrayIndex){
+    if (player.y === this.y && player.x === this.x){
+      messages1.addCustomMessage("You find a health potion. It heals you for " + this.healthGained + " health.");
+      player.health += this.healthGained;
+      itemArray.splice(itemArrayIndex, 1);
+    }
+  }
+
 }
 
 //a simple message handler class
