@@ -156,8 +156,6 @@ class Map{
 
 
         //changing the tile back to "#" and ends corridor if adjacent and parallel to a room
-        
-       
         if (this.corridorDirection === "up" || this.corridorDirection === "down"){
           if (this.map[this.corridorY + 1][this.corridorX -1] === "+" && this.map[this.corridorY - 1][this.corridorX -1] === "+" || this.map[this.corridorY + 1][this.corridorX + 1] === "+" && this.map[this.corridorY - 1][this.corridorX + 1] === "+"){
             this.map[this.corridorY][this.corridorX] = "#";
@@ -201,6 +199,7 @@ class Map{
     this.currentRoomHeight = Math.floor(random(this.minRoomSize, this.maxRoomSize));
     this.currentRoomWidth = Math.floor(random(this.minRoomSize, this.maxRoomSize));
 
+    //changes the xChange and yChange variables based on the direction of the corridor
     if (this.corridorDirection === "up"){
       this.roomYChange = -1;
       this.roomXChange = 1;
@@ -237,7 +236,7 @@ class Map{
         if (x <= 0 || x >= this.mapSize || y <= 0 || y >= this.mapSize) return false;
 
         if (this.map[y][x] === "."){
-          this.clipCorridor();
+          
           return false;
         }
 
@@ -250,6 +249,7 @@ class Map{
 
   }
 
+  //places the room into the map array if the spot is empty
   placeRoom(){
     this.potentialRoom();
 
@@ -268,11 +268,7 @@ class Map{
     
   }
 
-  clipCorridor(){
-    
-    
-  }
-
+  //places the stair which leads to the next floor
   placeStair(){
     while(this.map[this.stairY][this.stairX] !== "."){
       this.stairY = Math.floor(random(0, this.mapSize));
@@ -282,18 +278,21 @@ class Map{
 
   }
 
+  //adds all the entities into the entity list
   addEntities(){
     this.entities.push(new Character);
     this.addMonsters();
     this.placeMonsters();
   }
 
+  //places the entities into the map array
   placeEntities(){
     for (let entity = 0; entity < this.entities.length; entity++){
       this.map[this.entities[entity].y][this.entities[entity].x] = this.entities[entity].avatar;
     }
   }
 
+  //adds all the items into the items list
   addItems(){
     this.items = [];
     this.itemsOnMap = Math.floor(random(this.maxItemsOnMap));
@@ -303,6 +302,7 @@ class Map{
 
   }
 
+  //places all items onto the map
   placeItems(){
     for (let item = 0; item < this.items.length; item++){
       this.items[item].y = Math.floor(random(this.mapSize));
@@ -316,12 +316,14 @@ class Map{
     }
   }
 
+  //picks up items if the player is on them
   pickupItems(){
     for (let item = 0; item < this.items.length; item++){
       this.items[item].checkIfFound(this.entities[0], this.items, item, this.map);
     }
   }
 
+  //adds monsters into the entities list
   addMonsters(){
     this.entities.splice(1);
     this.monstersOnMap = Math.floor(random(this.maxMonstersOnMap));
@@ -330,6 +332,7 @@ class Map{
     }
   }
 
+  //places the monsters onto the map array
   placeMonsters(){
     for (let monster = 1; monster < this.entities.length; monster++){
       this.entities[monster].y = Math.floor(random(this.mapSize));
@@ -343,9 +346,22 @@ class Map{
     }
   }
 
+  //kills monsters and displays a message if their health reaches 0
+  killMonsters(messageObject){
+    for (let monster = 1; monster < this.entities.length; monster++){
+      if (this.entities[monster].health <= 0){
+        messageObject.addCustomMessage("You killed the " + this.entities[monster].name + ".");
+        this.map[this.entities[monster].y][this.entities[monster].x] = this.entities[monster].currentTile;
+        this.entities.splice(monster, 1);
+        
+      }
+    }
+  }
 
 
 
+
+  //calls functions from this class to reset the map
   resetMap(){
     this.map = [];
     this.createEmptyMap(this.mapSize);
@@ -358,21 +374,25 @@ class Map{
     
   }
 
+  //checks if the players on the stairs and resets the map
   checkIfOnStair(){
     if (this.entities[0].currentTile === "<"){
       this.resetMap();
     } 
   }
 
+  //passes a unit of time, moving all entities
   passTurn(messageObject){
+    messageObject.clearMessages();
     for (let entity = 0; entity < this.entities.length; entity++){
-      this.entities[entity].move(this.map);
+      this.entities[entity].move(this.map, messageObject);
 
     }
   }
 
   
 
+  //generates the dungeon
   generateDungeon(iterations){
  
     
@@ -382,7 +402,7 @@ class Map{
       this.addCorridor();
       this.placeRoom();
     }
-    this.clipCorridor();
+   
     this.placeStair();
     this.addItems();
     this.placeItems();
@@ -392,7 +412,7 @@ class Map{
 
 
   
-  //draws the map
+  //draws the map onto the screen with different colors for different tiles
   drawMap(size){
     textSize(this.textSize);
     for (let y = 0; y < size; y++){
@@ -436,8 +456,12 @@ class Map{
 
 }
 
+//the class for the character which the player controls
 class Character{
+
+  //initializing variables such as the player's health and x and y values etc
   constructor(){
+    this.dead = false;
     this.y = 25;
     this.x = 25;
     this.currentTile = ".";
@@ -451,15 +475,19 @@ class Character{
     this.lastDirection = "";
 
 
-    this.health = 10;
+    this.health = 50;
     this.weapon = "fists";
     this.attack = 1;
     this.weaponAttack = 0;
+    this.totalAttack = this.attack + this.weaponAttack;
 
     this.itemPendingPickup;
+    
 
   }
 
+
+  //changes the yChange and xChange variables based on the direction the player is facing
   changeMoveDirection(direction){
 
     if (direction === "up"){
@@ -490,9 +518,23 @@ class Character{
   }
 
 
+ 
+  //attacks enemies if they are in front of the player, who is trying to move into the space the enemy occupies
+  attackEnemy(){
+    this.totalAttack = this.attack + this.weaponAttack;
+    for (let entity = 1; entity < map1.entities.length; entity++){
+      if (map1.entities[entity].y === this.y + this.yChange && map1.entities[entity].x === this.x + this.xChange){
+        map1.entities[entity].health -= this.totalAttack;
+        messages1.addCustomMessage("You attack the " + map1.entities[entity].name + ", dealing " + this.totalAttack + " damage. (" + map1.entities[entity].health + " health remaining)");
+      }
+    }
+
+    
+  }
   
 
-  move(map){
+  //moves the player if they are trying to move into a moveable tile
+  move(map, messageObject){
     if (0 < this.x + this.xChange && 50 > this.x + this.xChange && 0 < this.y + this.yChange && 50 > this.y + this.yChange){
       if (map[this.y + this.yChange][this.x + this.xChange] === "." || map[this.y + this.yChange][this.x + this.xChange] === "+" || map[this.y + this.yChange][this.x + this.xChange] === "<" || map[this.y + this.yChange][this.x + this.xChange] === "*"){
         map[this.y][this.x] = this.currentTile;
@@ -502,33 +544,35 @@ class Character{
         map[this.y][this.x] = this.avatar;
         this.yChange = 0;
         this.Change = 0;
-        messages1.addMoveMessage(this.moveDirection);
+        messageObject.addMoveMessage(this.moveDirection);
         this.moveDirection = "stationary";
+       
         
       }
-      else{
-        
-        
 
       
+      else{
+        this.attackEnemy();
       }
+     
     }
+
+    
   
   }
 
-  checkDeadEnd(direction, messageObject){
-    if (this.currentTile === "+"){
-      if (this.moveDirection === direction){
-        messageObject.addDeadEndMessage();
+  //kills player and displays message if health reaches 0
+  killIfHealthZero(){
+    if (this.health <= 0){
+      this.dead = true;
+      messages1.addCustomMessage("You died!");
+      this.avatar = "X";
 
-      }
     }
   }
-
-  
-
 }
 
+//the class for the monsters
 class Monster{
   constructor(){
     this.y;
@@ -552,10 +596,12 @@ class Monster{
     this.attack = this.type[3];
     this.range = 7;
     this.playerInRange;
+    this.attackSynonyms = ["strikes", "pummels", "kicks", "punches", "slashes", "tackles"];
     
   }
 
 
+  //picks a move direction based on the position of the player
   pickMoveDirection(player){
     if (Math.floor(random(this.moveRoll)) !== 0){
       if (player.x < this.x){
@@ -584,11 +630,23 @@ class Monster{
 
   }
 
+  //checks if the player is in range
   inRange(player){
     if (Math.abs(player.x - this.x) < this.range && Math.abs(player.y - this.y) < this.range) return true;
     else return false;
   }
 
+  //attacks the player, dealing damage equal to its attack
+  attackPlayer(player){
+    if (this.y + this.yChange === player.y && this.x + this.xChange === player.x){
+      player.health -= this.attack;
+      messages1.addCustomMessage("The " + this.name + " " + this.attackSynonyms[Math.floor(random(this.attackSynonyms.length))] + " you, dealing " + this.attack + " damage!");
+    }
+
+
+  }
+
+  //moves if the player is in range and if trying to move into an empty space
   move(){
     this.pickMoveDirection(map1.entities[0]);
     if (map1.map[this.y + this.yChange][this.x + this.xChange] === "." || map1.map[this.y + this.yChange][this.x + this.xChange] === "+"){
@@ -600,11 +658,15 @@ class Monster{
      
       map1.map[this.y][this.x] = this.avatar;
     }
+    else{
+      this.attackPlayer(map1.entities[0]);
+    }
 
 
   }
 }
 
+//the class for the weapons which the player can pick up
 class Weapon{
   constructor(){
     this.avatar = "*";
@@ -624,6 +686,7 @@ class Weapon{
     this.y;
   }
 
+  //checks if the player is on the weapon
   checkIfFound(character, itemArray, itemArrayIndex){
     if (this.x === character.x && this.y === character.y){
      
@@ -639,12 +702,14 @@ class Weapon{
   }
 }
 
+//a simple message handler class
 class Messages{
   constructor(){
     this.y = 600;
     this.currentMessages = [];
   }
 
+  //adds various messages when called
   clearMessages(){
     this.currentMessages = [];
   }
@@ -667,11 +732,12 @@ class Messages{
     }
   }
 
+  //adds a custom message which must be specified
   addCustomMessage(message){
     this.currentMessages.push(message);
   }
 
-  
+  //changes the character state to weaponPickup (the player can't move until it's decided whether the weapon will be picked up or discarded)
   weaponFoundDecision(weapon, character){
     character.itemPendingPickup = weapon;
     character.state = "weaponPickup";
@@ -680,7 +746,7 @@ class Messages{
 
 
 
-
+  //displays all the messages in the currentMessages list
   displayMessages(){
     for (let message = 0; message < this.currentMessages.length; message++){
       textSize(15);
@@ -692,6 +758,7 @@ class Messages{
 
 }
 
+//draws stats like player health etc
 class Stats{
   constructor(){
     this.x = 650;
@@ -724,47 +791,51 @@ class Stats{
 let map1;
 let messages1;
 let stats1;
+
+//handles key presses and changes the move direction of the player and then passes the turn
 function keyPressed(){
 
   if (map1.entities[0].state === "standard"){
     if (keyCode === RIGHT_ARROW){
       map1.entities[0].changeMoveDirection("right");
       map1.passTurn(messages1);
-      messages1.clearMessages();
-      messages1.addMoveMessage("right");
-      //map1.entities[0].checkDeadEnd("right", messages1);
+     
+     
       
     }
     if (keyCode === LEFT_ARROW){
       map1.entities[0].changeMoveDirection("left");
-      map1.passTurn();
-      messages1.clearMessages();
-      messages1.addMoveMessage("left");
-      //map1.entities[0].checkDeadEnd("left", messages1);
+      map1.passTurn(messages1);
+      
+    
       
     }
     if (keyCode === UP_ARROW){
       map1.entities[0].changeMoveDirection("up");
-      map1.passTurn();
-      messages1.clearMessages();
-      messages1.addMoveMessage("up");
-      //map1.entities[0].checkDeadEnd("up", messages1);
+      map1.passTurn(messages1);
+     
+      
       
     }
     if (keyCode === DOWN_ARROW){
       map1.entities[0].changeMoveDirection("down");
-      map1.passTurn();
-      messages1.clearMessages();
-      messages1.addMoveMessage("down");
-     // map1.entities[0].checkDeadEnd("down", messages1);
+      map1.passTurn(messages1);
+     
+
     }
 
   }
+
+  
   
 }
 
+
+//handles instances where the player must pick up or discard a weapon
 function keyTyped(){
   if (map1.entities[0].state === "weaponPickup"){
+
+    //if the player chooses to pick up the weapon
     if (key === 'y'){
       map1.entities[0].weapon = map1.entities[0].itemPendingPickup.name;
       map1.entities[0].weaponAttack = map1.entities[0].itemPendingPickup.power;
@@ -774,6 +845,7 @@ function keyTyped(){
       messages1.addCustomMessage("You picked up the " + map1.entities[0].itemPendingPickup.name + ".");
 
     }
+    //if the weapon is discarded
     else if (key === 'n'){
       map1.entities[0].currentTile = ".";
       map1.entities[0].itemPendingPickup.found = true;
@@ -801,20 +873,26 @@ function setup() {
   map1.createEmptyMap(map1.mapSize);
   map1.placeSeedRoom(25, 25);
   
-  map1.generateDungeon(30);
+  map1.generateDungeon(10);
   map1.addEntities();
   map1.placeEntities();
 }
 
 function draw() {
-  
-  background(0);
+  if (map1.entities[0].dead === false){
+    background(0);
+  map1.entities[0].killIfHealthZero();
   map1.placeEntities();
   map1.drawMap(map1.mapSize);
   map1.checkIfOnStair();
   map1.pickupItems();
+  map1.killMonsters(messages1);
   messages1.displayMessages();
   stats1.drawStats();
+  }
+
+
+  
 
   
 
