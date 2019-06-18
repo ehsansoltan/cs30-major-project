@@ -4,6 +4,9 @@
 //
 // Extra for Experts:
 // I fulfilled two of my "needs to haves"
+//
+// Beta Testing:
+// My beta testers Alex and David suggested I make enemies progressively stronger and to add health potions which I did.
 
 
 class Map{
