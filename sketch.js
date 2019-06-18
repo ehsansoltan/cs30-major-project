@@ -1,9 +1,9 @@
 // Ascii Roguelike
-// Your Ehsan Soltan
+// Ehsan Soltan
 // June. 17, 2019
 //
 // Extra for Experts:
-// I fulfilled two of my 
+// I fulfilled two of my "needs to haves"
 
 
 class Map{
@@ -67,12 +67,29 @@ class Map{
     this.currentRoomWidth = random(2, this.maxRoomSize);
     this.currentRoomHeight = random(2, this.maxRoomSize);
 
+    if (x + this.currentRoomHeight > this.mapSize || y + this.currentRoomWidth > this.mapSize){
+      x -= 20;
+      y -= 20;
+      this.entities[0].x -= 20;
+      this.entities[0].y -= 20;
+      
+    }
+
     for (let yPos = y; yPos < y + this.currentRoomHeight; yPos++){
       for (let xPos = x; xPos < x + this.currentRoomWidth; xPos++){
+  
+          
         this.map[yPos][xPos] = ".";
+          
       }
-
+  
     }
+
+      
+
+    
+
+    
   }
 
 
@@ -791,7 +808,7 @@ class Messages{
 
 }
 
-//draws stats like player health etc
+//draws stats like player health and weapon strength etc
 class Stats{
   constructor(){
     this.x = 650;
